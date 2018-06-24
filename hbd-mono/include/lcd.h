@@ -69,6 +69,7 @@ void lcd_cmd(uint8_t cmd);
 void lcd_data(uint8_t cmd);
 void lcd_writebyte(uint16_t x, uint16_t y, uint16_t dat);
 void lcd_cleardisp(void);
+void lcd_filldisp(void);
 void lcd_show(void);
 void lcd_pix(uint16_t x, uint16_t y, uint8_t onoff);
 void lcd_drawCircle(uint16_t x, uint16_t y, uint16_t radius);

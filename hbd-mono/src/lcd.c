@@ -76,7 +76,7 @@ void lcd_cmd(uint8_t cmd)
   GPIOB->BSRR |= E_PIN;
   delay_us(LCD_SLEWRATE_DELAY_US);
 //  HAL_Delay(3);
-  GPIOB->BSRR |= RS_PIN;
+  GPIOB->BRR |= E_PIN;
   delay_us(LCD_SLEWRATE_DELAY_US);
 }
 
@@ -88,7 +88,7 @@ void lcd_data(uint8_t cmd)
   GPIOB->BSRR |= (RS_PIN | E_PIN);
   delay_us(LCD_SLEWRATE_DELAY_US);
 //  HAL_Delay(3);
-  GPIOB->BRR |= RS_PIN;
+  GPIOB->BRR |= E_PIN;
   delay_us(LCD_SLEWRATE_DELAY_US);
 }
 
@@ -114,6 +114,22 @@ void lcd_cleardisp(void)
     }
   }
   memset(lcd_framebuffer,0,2*LCD_WIDTH_WORDS*LCD_HEIGHT);
+
+}
+
+void lcd_filldisp(void)
+{
+
+  for(int y = 0; y< LCD_HEIGHT;y++)
+  {
+    lcd_writebyte(0,y,0xFFFF);
+    for(int x = 1; x < LCD_WIDTH_WORDS; x++)
+    {
+      lcd_data(0xff);
+      lcd_data(0xff);
+    }
+  }
+  memset(lcd_framebuffer,0xff,2*LCD_WIDTH_WORDS*LCD_HEIGHT);
 
 }
 

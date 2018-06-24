@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "diag/Trace.h"
+#include "gpio.h"
 #include "gfxfont.h"
 #include "lcd.h"
 
@@ -64,9 +65,12 @@ main(int argc, char* argv[])
 
 //  rtc_init();
 
-  mini_rand_init();
+//  mini_rand_init();
   lcd_init();
   lcd_cleardisp();
+
+  GPIO_Clk(GPIOA);
+  GPIO_Output(GPIOA,5);
 
   g_MainSysTick = 0;
 
@@ -77,21 +81,27 @@ main(int argc, char* argv[])
   while (1)
     {
        // Add your code here.
-      uint32_t myrand;
-      for(uint32_t i = 0; i < 14; i++)
-      {
-        // Get a new random number
-        myrand = mini_rand();
-        // Draw a circle
-        lcd_drawCircle((myrand % LCD_WIDTH), ((myrand>>8) % LCD_HEIGHT), ((myrand >> 16) % 8));
-      }
+//      uint32_t myrand;
+//      for(uint32_t i = 0; i < 14; i++)
+//      {
+//        // Get a new random number
+//        myrand = mini_rand();
+//        // Draw a circle
+//        lcd_drawCircle((myrand % LCD_WIDTH), ((myrand>>8) % LCD_HEIGHT), ((myrand >> 16) % 8));
+//      }
+
       /*
       for(uint8_t i = 0; i < 32; i++)
         lcd_pix(i,i,1);
       */
-      lcd_show();
+      lcd_filldisp();
+      GPIOA->BRR |= 0x0020;
+//      lcd_show();
       Main_Delay(500);
       lcd_cleardisp();
+      GPIOA->BSRR |= 0x0020;
+      Main_Delay(500);
+
     }
 }
 
