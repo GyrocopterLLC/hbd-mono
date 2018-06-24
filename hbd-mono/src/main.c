@@ -30,6 +30,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "diag/Trace.h"
+#include "gfxfont.h"
+#include "lcd.h"
 
 // ----------------------------------------------------------------------------
 //
@@ -41,7 +43,12 @@
 // changing the definitions required in system/src/diag/trace_impl.c
 // (currently OS_USE_TRACE_ITM, OS_USE_TRACE_SEMIHOSTING_DEBUG/_STDOUT).
 //
+static void rtc_init(void);
+static void mini_rand_init(void);
+static uint32_t mini_rand(void);
+void Main_Delay(uint32_t delayms);
 
+__IO uint32_t g_MainSysTick;
 // ----- main() ---------------------------------------------------------------
 
 // Sample pragmas to cope with warnings. Please note the related line at
@@ -55,13 +62,84 @@ int
 main(int argc, char* argv[])
 {
 
+//  rtc_init();
+
+  mini_rand_init();
+  lcd_init();
+  lcd_cleardisp();
+
+  g_MainSysTick = 0;
+
+  SysTick_Config(SystemCoreClock / 1000);
+  NVIC_SetPriority(SysTick_IRQn, 3);
+
   // Infinite loop
   while (1)
     {
        // Add your code here.
+      uint32_t myrand;
+      for(uint32_t i = 0; i < 14; i++)
+      {
+        // Get a new random number
+        myrand = mini_rand();
+        // Draw a circle
+        lcd_drawCircle((myrand % LCD_WIDTH), ((myrand>>8) % LCD_HEIGHT), ((myrand >> 16) % 8));
+      }
+      /*
+      for(uint8_t i = 0; i < 32; i++)
+        lcd_pix(i,i,1);
+      */
+      lcd_show();
+      Main_Delay(500);
+      lcd_cleardisp();
     }
 }
 
 #pragma GCC diagnostic pop
 
 // ----------------------------------------------------------------------------
+
+static void rtc_init(void)
+{
+  RCC->BDCR |= RCC_BDCR_RTCEN;
+
+  RTC->WPR = 0xCA; // RTC unlock sequence (part 1/2)
+  RTC->WPR = 0x53; // RTC unlock sequence (part 2/2)
+  RTC->CR &= ~(RTC_CR_WUTE); // disable wake up timer
+  while((RTC->ISR & RTC_ISR_WUTWF) == 0); // wait for okay to write
+  RTC->CR |= 0x0004; // Wake up timer source is 1Hz clock
+  RTC->WUTR = 0; // Every second
+  RTC->CR |= RTC_CR_WUTE; // re-enable it
+
+}
+
+static void mini_rand_init(void)
+{
+  // Turn on CRC module
+  RCC->AHBENR |= RCC_AHBENR_CRCEN;
+  // Feed my seed
+  CRC->INIT = 0xDEADBEEF;
+}
+
+static uint32_t mini_rand(void)
+{
+  // Feed the CRC with my value
+  CRC->DR = 0x4B8ECD09;
+
+  // Return the new CRC value
+  return (CRC->DR);
+}
+
+void Main_Delay(uint32_t delayms)
+{
+  uint32_t start_time = g_MainSysTick;
+  while( (start_time + delayms) > g_MainSysTick) ;
+}
+
+/**** INTERRUPTS ****/
+
+void SysTick_Handler(void)
+{
+  g_MainSysTick++;
+}
+

@@ -15,7 +15,7 @@
  */
 void GPIO_Clk(GPIO_TypeDef* gpio)
 {
-  uint32_t gpionum = ((uint32_t)gpio - AHBPERIPH_BASE);
+  uint32_t gpionum = ((uint32_t)gpio - AHB2PERIPH_BASE);
       gpionum /= 0x0400;
 
   RCC->AHBENR |= (RCC_AHBENR_GPIOAEN << gpionum);
