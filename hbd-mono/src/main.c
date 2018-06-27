@@ -33,6 +33,7 @@
 #include "gpio.h"
 #include "gfxfont.h"
 #include "lcd.h"
+#include "Fonts/Org_01.h"
 
 // ----------------------------------------------------------------------------
 //
@@ -45,8 +46,9 @@
 // (currently OS_USE_TRACE_ITM, OS_USE_TRACE_SEMIHOSTING_DEBUG/_STDOUT).
 //
 static void rtc_init(void);
-static void mini_rand_init(void);
-static uint32_t mini_rand(void);
+//static void mini_rand_init(void);
+//static uint32_t mini_rand(void);
+static void main_screen(void);
 void Main_Delay(uint32_t delayms);
 
 __IO uint32_t g_MainSysTick;
@@ -94,11 +96,13 @@ main(int argc, char* argv[])
       for(uint8_t i = 0; i < 32; i++)
         lcd_pix(i,i,1);
       */
-      lcd_filldisp();
+      main_screen();
+      lcd_show();
       GPIOA->BRR |= 0x0020;
 //      lcd_show();
       Main_Delay(500);
       lcd_cleardisp();
+      lcd_show();
       GPIOA->BSRR |= 0x0020;
       Main_Delay(500);
 
@@ -123,6 +127,12 @@ static void rtc_init(void)
 
 }
 
+static void main_screen(void)
+{
+  lcd_write(5,16,"Hi there.",&Org_01);
+}
+
+/*
 static void mini_rand_init(void)
 {
   // Turn on CRC module
@@ -139,6 +149,7 @@ static uint32_t mini_rand(void)
   // Return the new CRC value
   return (CRC->DR);
 }
+*/
 
 void Main_Delay(uint32_t delayms)
 {

@@ -103,34 +103,12 @@ void lcd_writebyte(uint16_t x, uint16_t y, uint16_t dat)
 
 void lcd_cleardisp(void)
 {
-
-  for(int y = 0; y< LCD_HEIGHT;y++)
-  {
-    lcd_writebyte(0,y,0x0000);
-    for(int x = 1; x < LCD_WIDTH_WORDS; x++)
-    {
-      lcd_data(0x00);
-      lcd_data(0x00);
-    }
-  }
   memset(lcd_framebuffer,0,2*LCD_WIDTH_WORDS*LCD_HEIGHT);
-
 }
 
 void lcd_filldisp(void)
 {
-
-  for(int y = 0; y< LCD_HEIGHT;y++)
-  {
-    lcd_writebyte(0,y,0xFFFF);
-    for(int x = 1; x < LCD_WIDTH_WORDS; x++)
-    {
-      lcd_data(0xff);
-      lcd_data(0xff);
-    }
-  }
   memset(lcd_framebuffer,0xff,2*LCD_WIDTH_WORDS*LCD_HEIGHT);
-
 }
 
 void lcd_show(void)
@@ -242,7 +220,16 @@ void lcd_drawChar(uint16_t x, uint16_t y, unsigned char c, GFXfont* gfxFont)
 
 void lcd_write(uint16_t x, uint16_t y, char* string, GFXfont* gfxFont)
 {
-
+  GFXglyph* charGlyph;
+  char c;
+  while(*string)
+  {
+    lcd_drawChar(x,y,*string,gfxFont);
+    c = *string - gfxFont->first;
+    charGlyph = &(gfxFont->glyph[c]);
+    x+= charGlyph->width+1;
+    string++;
+  }
 }
 
 /*
