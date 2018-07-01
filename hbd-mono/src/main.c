@@ -34,7 +34,7 @@
 #include "gpio.h"
 #include "gfxfont.h"
 #include "lcd.h"
-#include "Fonts/Org_01.h"
+#include "Fonts/Arial8pt.h"
 #include "Fonts/Impact18ptNumbers.h"
 
 // ----------------------------------------------------------------------------
@@ -51,9 +51,12 @@ static void rtc_init(void);
 //static void mini_rand_init(void);
 //static uint32_t mini_rand(void);
 static void main_screen(void);
+void stringflip(char* buf, uint32_t len);
+uint32_t _itoa(char* buf, int32_t num, uint32_t min_digits);
 void Main_Delay(uint32_t delayms);
 
 __IO uint32_t g_MainSysTick;
+uint32_t g_MainRampVariable;
 // ----- main() ---------------------------------------------------------------
 
 // Sample pragmas to cope with warnings. Please note the related line at
@@ -77,6 +80,7 @@ main(int argc, char* argv[])
   GPIO_Output(GPIOA,5);
 
   g_MainSysTick = 0;
+  g_MainRampVariable = 0;
 
   SysTick_Config(SystemCoreClock / 1000);
   NVIC_SetPriority(SysTick_IRQn, 3);
@@ -98,16 +102,17 @@ main(int argc, char* argv[])
       for(uint8_t i = 0; i < 32; i++)
         lcd_pix(i,i,1);
       */
+    lcd_cleardisp();
       main_screen();
       lcd_show();
-      GPIOA->BRR |= 0x0020;
 //      lcd_show();
-      Main_Delay(500);
-      lcd_cleardisp();
-      lcd_show();
-      GPIOA->BSRR |= 0x0020;
-      Main_Delay(500);
-
+//      Main_Delay(500);
+//      lcd_cleardisp();
+//      lcd_show();
+      GPIOA->ODR ^= 0x0020;
+      Main_Delay(100);
+      g_MainRampVariable++;
+      if(g_MainRampVariable >= 100) g_MainRampVariable = 0;
     }
 }
 
@@ -129,10 +134,56 @@ static void rtc_init(void)
 
 }
 
+
+
 static void main_screen(void)
 {
-//  lcd_write(5,16,"Hi there.",&Org_01);
-  lcd_write(0,0,"18.6",&Impact18ptNumbers);
+  char number_buffer[8];
+  lcd_write(40,0,"Hi there.",&Arial8pt);
+  _itoa(number_buffer, g_MainRampVariable, 2);
+  lcd_write(0,0,number_buffer,&Impact18ptNumbers);
+}
+
+void stringflip(char* buf, uint32_t len)
+{
+  uint32_t i = 0, j = len - 1;
+  char temp;
+  while (i < j)
+  {
+    temp = buf[i];
+    buf[i] = buf[j];
+    buf[j] = temp;
+    i++;
+    j--;
+  }
+}
+
+uint32_t _itoa(char* buf, int32_t num, uint32_t min_digits)
+{
+  uint32_t i = 0;
+  uint8_t is_neg = 0;
+  if(num < 0){
+    is_neg = 1;
+    num = -num;
+  }
+
+  do
+  {
+    buf[i++] = (num % 10) + '0';
+    num = num / 10;
+  }while(num);
+
+  while( i < min_digits)
+  {
+    buf[i++] = '0';
+  }
+  if(is_neg)
+  {
+    buf[i++] = '-';
+  }
+  stringflip(buf,i);
+  buf[i] = '\0';
+  return i;
 }
 
 /*
