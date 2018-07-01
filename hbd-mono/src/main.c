@@ -26,6 +26,7 @@
  */
 
 // ----------------------------------------------------------------------------
+
 #include "stm32f0xx.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,6 +35,7 @@
 #include "gfxfont.h"
 #include "lcd.h"
 #include "Fonts/Org_01.h"
+#include "Fonts/Impact18ptNumbers.h"
 
 // ----------------------------------------------------------------------------
 //
@@ -129,7 +131,8 @@ static void rtc_init(void)
 
 static void main_screen(void)
 {
-  lcd_write(5,16,"Hi there.",&Org_01);
+//  lcd_write(5,16,"Hi there.",&Org_01);
+  lcd_write(0,0,"18.6",&Impact18ptNumbers);
 }
 
 /*

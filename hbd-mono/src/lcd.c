@@ -183,6 +183,7 @@ void lcd_drawCircle(uint16_t x, uint16_t y, uint16_t radius)
   }
 }
 
+/*
 void lcd_drawChar(uint16_t x, uint16_t y, unsigned char c, GFXfont* gfxFont)
 {
   c -= gfxFont->first;
@@ -192,10 +193,7 @@ void lcd_drawChar(uint16_t x, uint16_t y, unsigned char c, GFXfont* gfxFont)
   uint16_t bo = glyph->bitmapOffset;
   uint8_t  w  = glyph->width,
        h  = glyph->height;
-  int8_t   xo = glyph->xOffset,
-       yo = glyph->yOffset;
   uint8_t  xx, yy, bits = 0, bit = 0;
-  int16_t  xo16 = 0, yo16 = 0;
 
   for(yy=0; yy<h; yy++)
   {
@@ -207,13 +205,49 @@ void lcd_drawChar(uint16_t x, uint16_t y, unsigned char c, GFXfont* gfxFont)
       }
       if(bits & 0x80)
       {
-        lcd_pix(x+xo+xx, y+yo+yy, 1);
+        lcd_pix(x+xx, y+yy, 1);
       }
       else
       {
-        lcd_pix(x+xo+xx, y+yo+yy, 0);
+        lcd_pix(x+xx, y+yy, 0);
       }
       bits <<= 1;
+    }
+  }
+}
+*/
+
+void lcd_drawChar(uint16_t x, uint16_t y, unsigned char c, GFXfont* gfxFont)
+{
+  c -= gfxFont->first;
+  GFXglyph *glyph  = &(gfxFont->glyph[c]);
+  uint8_t  *bitmap = gfxFont->bitmap;
+
+  uint16_t bo = glyph->bitmapOffset;
+  uint8_t  w  = glyph->width,
+       h  = glyph->height;
+  uint8_t  xx, yy, yy2, bits = 0, bit = 0;
+
+  for(yy=0; yy<(h/8)+1; yy++)
+  {
+    for(xx=0; xx<w; xx++)
+    {
+      bits=bitmap[bo++];
+      for(yy2=0;yy2<8;yy2++)
+      {
+        if((yy2+(8*yy)) < h)
+        {
+          if(bits & 0x80)
+          {
+            lcd_pix(x+xx, y+(yy*8)+yy2, 1);
+          }
+          else
+          {
+            lcd_pix(x+xx, y+(yy*8)+yy2, 0);
+          }
+        }
+        bits <<= 1;
+      }
     }
   }
 }
@@ -224,10 +258,15 @@ void lcd_write(uint16_t x, uint16_t y, char* string, GFXfont* gfxFont)
   char c;
   while(*string)
   {
-    lcd_drawChar(x,y,*string,gfxFont);
-    c = *string - gfxFont->first;
-    charGlyph = &(gfxFont->glyph[c]);
-    x+= charGlyph->width+1;
+    if(*string == ' ')
+      x+= gfxFont->spaceAdvance;
+    else
+    {
+      lcd_drawChar(x,y,*string,gfxFont);
+      c = *string - gfxFont->first;
+      charGlyph = &(gfxFont->glyph[(uint32_t)c]);
+      x+= charGlyph->width+1;
+    }
     string++;
   }
 }
